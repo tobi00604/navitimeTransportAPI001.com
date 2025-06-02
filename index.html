@@ -425,7 +425,7 @@
             const response = await fetch('/.netlify/functions/fetch-data?endpoint=second&stationId=' + stationId);
             const data = await response.json();
             if (data.items && data.items.length > 0) {
-                return data.items;
+                return data.items[0].details;
             }
             return null;
         }
@@ -435,7 +435,7 @@
             const response = await fetch('/.netlify/functions/fetch-data?endpoint=third&routeId=' + routeId);
             const data = await response.json();
             if (data.items && data.items.length > 0) {
-                return data.items;
+                return data.items[0].nodes;
             }
             return null;
         }
