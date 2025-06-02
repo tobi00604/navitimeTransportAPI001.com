@@ -34,8 +34,6 @@ export async function handler(event, context) {
         body: JSON.stringify({ error: `Unknown endpoint: ${endpoint}` }),
       };
   }
-  
-  console.log('url: ', url);
 
   try {
     const response = await fetch(url, {
