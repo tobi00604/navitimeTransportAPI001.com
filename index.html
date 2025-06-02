@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>駅・路線検索システム</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .search-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #searchInput:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-50%) scale(1.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            min-height: calc(100vh - 200px);
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .panel h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            font-weight: 600;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .list-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .list-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .list-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .list-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+
+        .list-item {
+            padding: 15px;
+            margin: 8px 0;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .list-item.selected {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .station-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .station-info {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .route-name {
+            font-weight: 600;
+            font-size: 1em;
+            margin-bottom: 5px;
+        }
+
+        .route-info {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .detail-name {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .detail-info {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-size: 1.1em;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #95a5a6;
+            font-style: italic;
+        }
+
+        .detail-item {
+            margin: 15px 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .panel {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="search-container">
+            <h1>🚃 駅路駅</h1>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="駅名を入力してください（例：東京、新宿、山、３）" />
+                <button class="search-btn" onclick="searchStations()">🔍</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="panel">
+            <h2>📍 駅検索結果</h2>
+            <div id="stationList" class="list-container">
+                <div class="empty">駅名を検索してください</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>🚆 その駅の路線一覧</h2>
+            <div id="routeList" class="list-container">
+                <div class="empty">← 駅を選択してください</div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>📋 その路線の駅一覧</h2>
+            <div id="routeDetail" class="list-container">
+                <div class="empty">← 路線を選択してください</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedStation = null;
+        let selectedRoute = null;
+
+        // 検索入力のイベントリスナー
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchStations();
+            }
+        });
+
+        // 駅検索機能
+        async function searchStations() {
+            const keyword = document.getElementById('searchInput').value.trim();
+            if (!keyword) return;
+
+            const stationList = document.getElementById('stationList');
+            stationList.innerHTML = '<div class="loading">駅を検索中...</div>';
+
+            try {
+                // 実際のAPI呼び出し
+                const stations = await getStations(encodeURIComponent(keyword));
+                displayStations(stations);
+            } catch (error) {
+                stationList.innerHTML = '<div class="error">駅の検索に失敗しました</div>';
+                console.error('Station search error:', error);
+            }
+        }
+
+        function displayStations(stations) {
+            const stationList = document.getElementById('stationList');
+            
+            if (!stations || stations.length === 0) {
+                stationList.innerHTML = '<div class="empty">該当する駅が見つかりません</div>';
+                return;
+            }
+
+            const html = stations.map(station => `
+                <div class="list-item" onclick="selectStation('${station.id}', '${station.name}', this)">
+                    <div class="station-name">${station.name}</div>
+                    <div class="station-info">${station.ruby}</div>
+                    <div class="station-info">${station.address_name}</div>
+                </div>
+            `).join('');
+
+            stationList.innerHTML = html;
+        }
+
+        async function selectStation(stationId, stationName, element) {
+            // 選択状態の更新
+            document.querySelectorAll('#stationList .list-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            element.classList.add('selected');
+
+            selectedStation = { id: stationId, name: stationName };
+            
+            const routeList = document.getElementById('routeList');
+            routeList.innerHTML = '<div class="loading">路線を取得中...</div>';
+
+            document.getElementById('routeDetail').innerHTML = '<div class="empty">路線を選択してください</div>';
+
+            try {
+                const routes = await getStationRoutes(stationId);
+                displayRoutes(routes);
+            } catch (error) {
+                routeList.innerHTML = '<div class="error">路線の取得に失敗しました</div>';
+                console.error('Route fetch error:', error);
+            }
+        }
+
+        function displayRoutes(routes) {
+            const routeList = document.getElementById('routeList');
+            
+            if (!routes || routes.length === 0) {
+                routeList.innerHTML = '<div class="empty">路線が見つかりません</div>';
+                return;
+            }
+
+            const html = routes.map(route => `
+                <div class="list-item" onclick="selectRoute('${route.link.id}', '${route.link.name}', this)">
+                    <div class="route-name">${route.link.name}</div>
+                    <div class="route-info">${route.company.name || ''}</div>
+                </div>
+            `).join('');
+
+            routeList.innerHTML = html;
+        }
+
+        async function selectRoute(routeId, routeName, element) {
+            // 選択状態の更新
+            document.querySelectorAll('#routeList .list-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            element.classList.add('selected');
+
+            selectedRoute = { id: routeId, name: routeName };
+            
+            const routeDetail = document.getElementById('routeDetail');
+            routeDetail.innerHTML = '<div class="loading">詳細情報を取得中...</div>';
+
+            try {
+                const detail = await getRouteDetail(routeId);
+                displayRouteDetail(detail);
+            } catch (error) {
+                routeDetail.innerHTML = '<div class="error">詳細情報の取得に失敗しました</div>';
+                console.error('Route detail error:', error);
+            }
+        }
+
+        function displayRouteDetail(details) {
+            const routeDetail = document.getElementById('routeDetail');
+            
+            if (!details || details.length === 0) {
+                routeDetail.innerHTML = '<div class="empty">詳細情報が見つかりません</div>';
+                return;
+            }
+
+            const html = details.map(detail => `
+                <div class="list-item">
+                    <div class="detail-name">${detail.name}</div>
+                    <div class="detail-info">${detail.ruby}</div>
+                    <div class="detail-info">${detail.address_name}</div>
+                </div>
+            `).join('');
+
+            routeDetail.innerHTML = html;
+        }
+
+        async function getStations(word) {
+            // https://rapidapi.com/navitimejapan-navitimejapan/api/navitime-transport/playground/apiendpoint_8a86e916-5cc2-435c-ad0b-53b0c306b14b
+            fetch('/.netlify/functions/fetch-data?endpoint=first&word=${word}')
+            .then(res => res.json())
+            .then(data => {
+            
+                if (data.items && data.items.length > 0) {
+                    return data.items;
+                }
+            
+                return null;
+            });
+        }
+
+        async function getStationRoutes(stationId) {
+            // https://rapidapi.com/navitimejapan-navitimejapan/api/navitime-transport/playground/apiendpoint_d3fce089-ca22-4cd9-b41b-559a8aeb58f8
+            fetch('/.netlify/functions/fetch-data?endpoint=second&stationId=${stationId}')
+            .then(res => res.json())
+            .then(data => {
+            
+                if (data.items && data.items.length > 0) {
+                    return data.items;
+                }
+            
+                return null;
+            });
+        }
+
+        async function getRouteDetail(routeId) {
+            // https://rapidapi.com/navitimejapan-navitimejapan/api/navitime-transport/playground/apiendpoint_028e3314-203d-4aa5-ac32-9615dcc3022e
+            fetch('/.netlify/functions/fetch-data?endpoint=third&routeId=${routeId}')
+            .then(res => res.json())
+            .then(data => {
+            
+                if (data.items && data.items.length > 0) {
+                    return data.items;
+                }
+            
+                return null;
+            });
+        }
+    </script>
+</body>
+</html>
