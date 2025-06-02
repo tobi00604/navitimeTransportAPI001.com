@@ -18,15 +18,15 @@ export async function handler(event, context) {
   switch (endpoint) {
     case 'first':
       const word = event.queryStringParameters.word;
-      url = `https://navitime-transport.p.rapidapi.com/transport_node?coord_unit=degree&word=${word}&offset=0&datum=wgs84&limit=10`;
+      url = `https://navitime-transport.p.rapidapi.com/transport_node?coord_unit=degree&word=` + word + `&offset=0&datum=wgs84&limit=10`;
       break;
     case 'second':
       const stationId = event.queryStringParameters.stationId;
-      url = `https://navitime-transport.p.rapidapi.com/transport_node/id?id=${stationId}&datum=wgs84&coord_unit=degree&options=detail`;
+      url = `https://navitime-transport.p.rapidapi.com/transport_node/id?id=` + stationId + `&datum=wgs84&coord_unit=degree&options=detail`;
       break;
     case 'third':
       const routeId = event.queryStringParameters.routeId;
-      url = `https://navitime-transport.p.rapidapi.com/transport_link/id?options=node&id=${routeId}&coord_unit=degree&datum=wgs84`;
+      url = `https://navitime-transport.p.rapidapi.com/transport_link/id?options=node&id=` + routeId + `&coord_unit=degree&datum=wgs84`;
       break;
     default:
       return {
