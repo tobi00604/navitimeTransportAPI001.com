@@ -412,7 +412,7 @@
 
         async function getStations(word) {
             // https://rapidapi.com/navitimejapan-navitimejapan/api/navitime-transport/playground/apiendpoint_8a86e916-5cc2-435c-ad0b-53b0c306b14b
-            const response = await fetch('/.netlify/functions/fetch-data?endpoint=first&word=' + word);
+            const response = await fetch(`/.netlify/functions/fetch-data?endpoint=first&word=${word}`);
             const data = await response.json();
             if (data.items && data.items.length > 0) {
                 return data.items;
@@ -422,7 +422,7 @@
 
         async function getStationRoutes(stationId) {
             // https://rapidapi.com/navitimejapan-navitimejapan/api/navitime-transport/playground/apiendpoint_d3fce089-ca22-4cd9-b41b-559a8aeb58f8
-            const response = await fetch('/.netlify/functions/fetch-data?endpoint=second&stationId=' + stationId);
+            const response = await fetch(`/.netlify/functions/fetch-data?endpoint=second&stationId=${stationId}`);
             const data = await response.json();
             if (data.items && data.items.length > 0) {
                 return data.items[0].details;
@@ -432,7 +432,7 @@
 
         async function getRouteDetail(routeId) {
             // https://rapidapi.com/navitimejapan-navitimejapan/api/navitime-transport/playground/apiendpoint_028e3314-203d-4aa5-ac32-9615dcc3022e
-            const response = await fetch('/.netlify/functions/fetch-data?endpoint=third&routeId=' + routeId);
+            const response = await fetch(`/.netlify/functions/fetch-data?endpoint=third&routeId=${routeId}`);
             const data = await response.json();
             if (data.items && data.items.length > 0) {
                 return data.items[0].nodes;
